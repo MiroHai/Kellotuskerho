@@ -34,7 +34,7 @@
       max-width: 400px;
       text-align: center;
       overflow-y: auto;
-      max-height: 90vh; /* Prevents cropping while allowing some breathing room */
+      max-height: 90vh;
     }
     .container h2 {
       color: var(--text-color);
@@ -61,11 +61,10 @@
       box-sizing: border-box;
     }
     textarea {
-      height: 150px; /* 2.5 times larger height */
+      height: 150px;
     }
     button {
-      width: 100%;
-      padding: 12px;
+      padding: 10px 20px;
       background-color: var(--button-bg);
       color: var(--text-color);
       border: none;
@@ -73,17 +72,33 @@
       font-size: 16px;
       cursor: pointer;
       transition: background-color 0.3s ease;
+      margin: 5px;
     }
     button:hover {
       background-color: var(--button-hover-bg);
     }
+    .timer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .timer-display {
+      font-size: 24px;
+      font-weight: bold;
+      margin-right: 15px;
+    }
+    .laps {
+      margin-top: 10px;
+      text-align: left;
+    }
     @media (max-width: 600px) {
       body {
-        padding: 10px; /* Allows proper scrolling on smaller screens */
-        display: block; /* Allow body to scroll naturally */
+        padding: 10px;
+        display: block;
       }
       .container {
-        max-height: none; /* Remove max-height to let it expand */
+        max-height: none;
       }
     }
   </style>
@@ -107,6 +122,17 @@
       <label for="input4">4. Avataan</label>
       <textarea id="input4"></textarea>
     </div>
+
+    <!-- Timer Interface -->
+    <div class="timer-interface">
+      <div class="timer">
+        <div class="timer-display" id="timerDisplay">00:00:00.00</div>
+        <button id="startPauseButton">Start</button>
+        <button id="lapButton">Take Lap</button>
+      </div>
+      <div class="laps" id="laps"></div>
+    </div>
+
     <div class="input-group">
       <label for="input5">5. Kellotus ja ajat</label>
       <textarea id="input5"></textarea>
@@ -120,10 +146,53 @@
       <textarea id="input7"></textarea>
     </div>
     <button onclick="copyToClipboard()">Kopioi</button>
-    <p>Kellotuksia pohjalla: <span id="counter">0</span> </p>
+    <p>Kellotuksia pohjalla: <span id="counter">0</span></p>
   </div>
   <script>
     let copyCount = 0;
+    let timerInterval = null;
+    let elapsedTime = 0;
+
+function formatTime(timeInMs) {
+  const hours = Math.floor(timeInMs / (1000 * 60 * 60)).toString().padStart(2, '0');
+  const minutes = Math.floor((timeInMs % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+  const seconds = Math.floor((timeInMs % (1000 * 60)) / 1000).toString().padStart(2, '0');
+  const milliseconds = Math.floor((timeInMs % 1000) / 10).toString().padStart(2, '0'); // Convert to two digits
+  return `${hours}:${minutes}:${seconds}.${milliseconds}`;
+}
+
+function updateTimerDisplay() {
+  document.getElementById('timerDisplay').innerText = formatTime(elapsedTime);
+}
+
+
+
+    function toggleTimer() {
+      const button = document.getElementById('startPauseButton');
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        button.innerText = 'Start';
+      } else {
+        const startTime = Date.now() - elapsedTime;
+        timerInterval = setInterval(() => {
+          elapsedTime = Date.now() - startTime;
+          updateTimerDisplay();
+        }, 100);
+        button.innerText = 'Pause';
+      }
+    }
+
+    function recordLap() {
+      const lapsContainer = document.getElementById('laps');
+      const lapTime = formatTime(elapsedTime);
+      const lapElement = document.createElement('div');
+      lapElement.innerText = `Lap: ${lapTime}`;
+      lapsContainer.appendChild(lapElement);
+    }
+
+    document.getElementById('startPauseButton').addEventListener('click', toggleTimer);
+    document.getElementById('lapButton').addEventListener('click', recordLap);
 
     fetch('/getCount')
       .then(response => response.json())

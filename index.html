@@ -6,6 +6,14 @@
   <meta name="description" content="Kellotuskerho - Meeting agenda tool">
   <title>Kellotuskerho</title>
   <style>
+    :root {
+      --bg-color: #121212;
+      --text-color: #e0e0e0;
+      --input-bg: #1e1e1e;
+      --button-bg: #3e8e41;
+      --button-hover-bg: #367837;
+      --border-color: #444;
+    }
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -14,11 +22,12 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background: #f3f4f6;
+      background: var(--bg-color);
+      color: var(--text-color);
     }
     .container {
-      background: #ffffff;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      background: var(--input-bg);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
       border-radius: 10px;
       padding: 20px;
       width: 90%;
@@ -27,7 +36,7 @@
       overflow-y: auto;
     }
     .container h2 {
-      color: #333;
+      color: var(--text-color);
       margin-bottom: 20px;
     }
     .input-group {
@@ -37,31 +46,27 @@
     .input-group label {
       display: block;
       margin-bottom: 5px;
-      color: #555;
+      color: var(--text-color);
       font-size: 14px;
     }
-    input {
+    input, textarea {
       width: 100%;
       padding: 10px;
-      border: 1px solid #ddd;
+      background: var(--input-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
       border-radius: 5px;
       font-size: 16px;
       box-sizing: border-box;
     }
     textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 16px;
-      box-sizing: border-box;
       height: 150px; /* 2.5 times larger height */
     }
     button {
       width: 100%;
       padding: 12px;
-      background-color: #4CAF50;
-      color: white;
+      background-color: var(--button-bg);
+      color: var(--text-color);
       border: none;
       border-radius: 5px;
       font-size: 16px;
@@ -69,7 +74,7 @@
       transition: background-color 0.3s ease;
     }
     button:hover {
-      background-color: #45a049;
+      background-color: var(--button-hover-bg);
     }
     @media (max-width: 600px) {
       body {
@@ -103,7 +108,7 @@
       <textarea id="input4"></textarea>
     </div>
     <div class="input-group">
-      <label for="input5">5. Kellotetaan ja ajat</label>
+      <label for="input5">5. Kellotus ja ajat</label>
       <textarea id="input5"></textarea>
     </div>
     <div class="input-group">
@@ -127,55 +132,47 @@
         document.getElementById("counter").innerText = copyCount;
       });
 
-function copyToClipboard() {
-  const fields = [
-    { label: "1. Meidän PJ", id: "input1" },
-    { label: "2. Sihteeri", id: "input2" },
-    { label: "3. Sijainti", id: "input3" },
-    { label: "4. Avataan", id: "input4" },
-    { label: "5. Kellotetaan", id: "input5" },
-    { label: "6. Uusia jäseniä?", id: "input6" },
-    { label: "7. Jäpättävää", id: "input7" },
-  ];
+    function copyToClipboard() {
+      const fields = [
+        { label: "1. Meidän PJ", id: "input1" },
+        { label: "2. Sihteeri", id: "input2" },
+        { label: "3. Sijainti", id: "input3" },
+        { label: "4. Avataan", id: "input4" },
+        { label: "5. Kellotus ja ajat", id: "input5" },
+        { label: "6. Uusia jäseniä", id: "input6" },
+        { label: "7. Jäpättävää", id: "input7" },
+      ];
 
-  // Combine the first three inputs without extra line breaks
-  const firstThree = fields.slice(0, 3).map(field => {
-    const inputValue = document.getElementById(field.id).value.trim();
-    return `${field.label}: ${inputValue}`;
-  }).join("\n");
+      let firstThree = `${fields[0].label}: ${document.getElementById(fields[0].id).value}\n` +
+                       `${fields[1].label}: ${document.getElementById(fields[1].id).value}\n` +
+                       `${fields[2].label}: ${document.getElementById(fields[2].id).value}`;
 
-  // Combine the remaining fields with properly formatted line breaks
-  const otherLines = fields.slice(3).map(field => {
-    const inputValue = document.getElementById(field.id).value.trim();
-    return `${field.label}:\n${inputValue}`;
-  }).join("\n");
+      let otherLines = fields.slice(3).map(
+        (field) => `${field.label}:\n${document.getElementById(field.id).value}`
+      ).join("\n");
 
-  // Combine all content
-  const allInputs = `${firstThree}\n${otherLines}`.trim(); // Ensure no trailing newlines
+      let allInputs = `${firstThree}\n${otherLines}`;
+      let tempTextarea = document.createElement("textarea");
+      tempTextarea.value = allInputs;
 
-  // Copy content to clipboard
-  const tempTextarea = document.createElement("textarea");
-  tempTextarea.value = allInputs;
-  document.body.appendChild(tempTextarea);
-  tempTextarea.select();
-  document.execCommand("copy");
-  document.body.removeChild(tempTextarea);
+      document.body.appendChild(tempTextarea);
+      tempTextarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempTextarea);
 
-  // Increment the counter and update the server
-  copyCount++;
-  document.getElementById("counter").innerText = copyCount;
+      copyCount++;
+      document.getElementById("counter").innerText = copyCount;
 
-  fetch('/updateCount', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ count: copyCount })
-  });
+      fetch('/updateCount', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ count: copyCount })
+      });
 
-  alert("Kopioitu!");
-}
-
+      alert("Kopioitu!");
+    }
   </script>
 </body>
 </html>
